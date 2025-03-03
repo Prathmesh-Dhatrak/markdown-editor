@@ -53,7 +53,7 @@ export const initDB = async () => {
         uiSettings: {
           sidebarWidth: 250,
           previewEnabled: true,
-          darkMode: false,
+          darkMode: true,
         },
       };
 
