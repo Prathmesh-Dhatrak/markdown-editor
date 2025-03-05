@@ -1,9 +1,8 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
 import { 
   getAllFolders, 
-  getAllFiles, 
-  getChildFolders, 
-  getFilesByFolder,
+  getAllFiles,
+  getFile,
   createFolder,
   createFile,
   updateFolder,
@@ -47,30 +46,49 @@ export const FileSystemProvider: React.FC<{ children: ReactNode }> = ({ children
   const [activeFolderId, setActiveFolderId] = useState<string | null>('root');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  
+  // Use a ref to track whether a full refresh is in progress
+  const isRefreshingRef = useRef(false);
 
-  const activeFile = activeFileId 
-    ? files.find(file => file.id === activeFileId) || null 
-    : null;
+  // This is a more robust way to get the active file
+  const activeFile = React.useMemo(() => {
+    return activeFileId 
+      ? files.find(file => file.id === activeFileId) || null 
+      : null;
+  }, [activeFileId, files]);
 
   const refreshFileSystem = async () => {
     if (!isInitialized) return;
     
+    // Prevent concurrent refreshes
+    if (isRefreshingRef.current) {
+      console.log("Refresh already in progress, skipping");
+      return;
+    }
+    
+    isRefreshingRef.current = true;
     setIsLoading(true);
+    
     try {
+      console.log("Starting file system refresh");
       const [allFolders, allFiles, appState] = await Promise.all([
         getAllFolders(),
         getAllFiles(),
         getAppState()
       ]);
       
+      console.log(`Loaded ${allFolders.length} folders and ${allFiles.length} files`);
+      
       setFolders(allFolders);
       setFiles(allFiles);
       setActiveFileId(appState.activeFileId);
       setActiveFolderId(appState.activeFolderId);
     } catch (err) {
+      console.error("Error refreshing file system:", err);
       setError(err instanceof Error ? err : new Error('Failed to load file system'));
     } finally {
       setIsLoading(false);
+      isRefreshingRef.current = false;
     }
   };
 
@@ -98,16 +116,44 @@ export const FileSystemProvider: React.FC<{ children: ReactNode }> = ({ children
   };
 
   const updateFileContent = async (id: string, content: string) => {
-    await updateFile(id, { content });
-    // Don't refresh the entire file system for content updates
-    // Just update the local state
-    setFiles(prevFiles => 
-      prevFiles.map(file => 
-        file.id === id 
-          ? { ...file, content, updatedAt: Date.now() } 
-          : file
-      )
-    );
+    try {
+      // First check if the file exists in our current state
+      const fileInState = files.find(file => file.id === id);
+      
+      if (!fileInState) {
+        console.log(`File with id ${id} not found in context state, checking database directly`);
+        
+        // If not in state, try to get it directly from the database
+        const fileFromDB = await getFile(id);
+        
+        if (!fileFromDB) {
+          console.error(`File with id ${id} not found in database either`);
+          throw new Error(`File with id ${id} not found`);
+        }
+        
+        // If we found it in the database but not in state, add it to state
+        console.log(`Found file ${id} in database, adding to state`);
+        setFiles(prevFiles => [...prevFiles, fileFromDB]);
+      }
+      
+      // Now update in database
+      await updateFile(id, { content });
+      console.log(`File ${id} updated in database`);
+      
+      // Update local state without triggering a full refresh
+      setFiles(prevFiles => 
+        prevFiles.map(file => 
+          file.id === id 
+            ? { ...file, content, updatedAt: Date.now() } 
+            : file
+        )
+      );
+      
+      console.log(`File ${id} updated in state`);
+    } catch (error) {
+      console.error('Error updating file content:', error);
+      throw error;
+    }
   };
 
   const updateFileName = async (id: string, name: string) => {
@@ -124,19 +170,59 @@ export const FileSystemProvider: React.FC<{ children: ReactNode }> = ({ children
     await deleteFile(id);
     if (activeFileId === id) {
       await setActiveFile(null);
+      setActiveFileId(null);
     }
     await refreshFileSystem();
   };
 
   const setActiveFileById = async (id: string | null) => {
-    await setActiveFile(id);
-    setActiveFileId(id);
+    try {
+      console.log(`Setting active file to: ${id || 'null'}`);
+      
+      // Update in the database
+      await setActiveFile(id);
+      
+      // Update local state
+      setActiveFileId(id);
+      
+      // If setting a file as active, ensure it exists in our local state
+      if (id && !files.some(file => file.id === id)) {
+        console.log(`Active file ${id} not in state yet, fetching`);
+        
+        try {
+          const file = await getFile(id);
+          if (file) {
+            console.log(`Found file ${id}, adding to state`);
+            setFiles(prevFiles => [...prevFiles, file]);
+          } else {
+            console.error(`Could not find file ${id} in database`);
+          }
+        } catch (err) {
+          console.error(`Error fetching file ${id}:`, err);
+        }
+      }
+    } catch (err) {
+      console.error(`Error setting active file to ${id}:`, err);
+      throw err;
+    }
   };
 
   const setActiveFolderById = async (id: string | null) => {
     await setActiveFolder(id);
     setActiveFolderId(id);
   };
+
+  // Provide debug information about active file status
+  useEffect(() => {
+    if (activeFileId) {
+      const fileExists = files.some(f => f.id === activeFileId);
+      console.log(`Active file ${activeFileId} exists in state: ${fileExists}`);
+      
+      if (!fileExists) {
+        console.log('Files in state:', files.map(f => ({ id: f.id, name: f.name })));
+      }
+    }
+  }, [activeFileId, files]);
 
   return (
     <FileSystemContext.Provider

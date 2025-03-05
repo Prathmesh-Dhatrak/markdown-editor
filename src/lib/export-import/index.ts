@@ -1,17 +1,13 @@
-import { v4 as uuidv4 } from 'uuid';
 import { 
   getAllFolders, 
   getAllFiles, 
   createFolder, 
   createFile,
-  getFolder,
-  getFile,
   updateFolder,
   updateFile
 } from '../db';
 import { ExportData, MergeStrategy, ImportResult, FolderData, FileData } from '../../types';
 
-// Export functionality
 export const exportToJSON = async (): Promise<ExportData> => {
   const folders = await getAllFolders();
   const files = await getAllFiles();
@@ -40,6 +36,7 @@ export const downloadExport = async (): Promise<void> => {
 };
 
 // Import functionality
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const validateImportData = (data: any): boolean => {
   if (!data || typeof data !== 'object') return false;
   if (!data.version || !data.exportedAt) return false;
