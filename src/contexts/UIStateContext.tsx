@@ -1,19 +1,10 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useState, useEffect, ReactNode } from 'react';
 import { getAppState, updateUISettings } from '../lib/db';
-import { UISettings } from '../types';
-import { useDatabase } from './DatabaseContext';
+import { UISettings, UIStateContextType } from '../types';
+import { useDatabase } from '../hooks/useDatabase';
 
-interface UIStateContextType {
-  sidebarWidth: number;
-  previewEnabled: boolean;
-  darkMode: boolean;
-  isLoading: boolean;
-  setSidebarWidth: (width: number) => Promise<void>;
-  togglePreview: () => Promise<void>;
-  toggleDarkMode: () => Promise<void>;
-}
 
-const UIStateContext = createContext<UIStateContextType | undefined>(undefined);
+export const UIStateContext = createContext<UIStateContextType | undefined>(undefined);
 
 export const UIStateProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const { isInitialized } = useDatabase();
@@ -86,12 +77,4 @@ export const UIStateProvider: React.FC<{ children: ReactNode }> = ({ children })
       {children}
     </UIStateContext.Provider>
   );
-};
-
-export const useUIState = (): UIStateContextType => {
-  const context = useContext(UIStateContext);
-  if (context === undefined) {
-    throw new Error('useUIState must be used within a UIStateProvider');
-  }
-  return context;
 };

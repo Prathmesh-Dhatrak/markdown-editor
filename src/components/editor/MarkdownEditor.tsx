@@ -3,9 +3,9 @@ import CodeMirror from '@uiw/react-codemirror';
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
 import { languages } from '@codemirror/language-data';
 import { githubLight, githubDark } from '@uiw/codemirror-theme-github';
-import { useFileSystem } from '../../contexts/FileSystemContext';
-import { useUIState } from '../../contexts/UIStateContext';
 import { debounce } from '../../lib/utils';
+import { useFileSystem } from '../../hooks/useFileSystem';
+import { useUIState } from '../../hooks/useUIState';
 
 const MarkdownEditor: React.FC = () => {
   const { activeFile, updateFileContent } = useFileSystem();

@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { FolderPlus, FilePlus } from 'lucide-react';
 import FolderItem from './FolderItem';
-import { useFileSystem } from '../../contexts/FileSystemContext';
 import Spinner from '../common/Spinner';
+import { useFileSystem } from '../../hooks/useFileSystem';
 
 const FolderTree: React.FC = () => {
   const { 

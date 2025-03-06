@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
+import React, { createContext, useState, useEffect, useRef, ReactNode } from 'react';
 import { 
   getAllFolders, 
   getAllFiles,
@@ -13,30 +13,10 @@ import {
   setActiveFile,
   setActiveFolder
 } from '../lib/db';
-import { FolderData, FileData } from '../types';
-import { useDatabase } from './DatabaseContext';
+import { FolderData, FileData, FileSystemContextType } from '../types';
+import { useDatabase } from '../hooks/useDatabase';
 
-interface FileSystemContextType {
-  folders: FolderData[];
-  files: FileData[];
-  activeFileId: string | null;
-  activeFolderId: string | null;
-  activeFile: FileData | null;
-  isLoading: boolean;
-  error: Error | null;
-  refreshFileSystem: () => Promise<void>;
-  createNewFolder: (name: string, parentId: string | null) => Promise<string>;
-  createNewFile: (name: string, folderId: string, content?: string) => Promise<string>;
-  updateFolderName: (id: string, name: string) => Promise<void>;
-  updateFileContent: (id: string, content: string) => Promise<void>;
-  updateFileName: (id: string, name: string) => Promise<void>;
-  removeFolder: (id: string, recursive: boolean) => Promise<void>;
-  removeFile: (id: string) => Promise<void>;
-  setActiveFileById: (id: string | null) => Promise<void>;
-  setActiveFolderById: (id: string | null) => Promise<void>;
-}
-
-const FileSystemContext = createContext<FileSystemContextType | undefined>(undefined);
+export const FileSystemContext = createContext<FileSystemContextType | undefined>(undefined);
 
 export const FileSystemProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const { isInitialized } = useDatabase();
@@ -96,6 +76,7 @@ export const FileSystemProvider: React.FC<{ children: ReactNode }> = ({ children
     if (isInitialized) {
       refreshFileSystem();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isInitialized]);
 
   const createNewFolder = async (name: string, parentId: string | null = 'root') => {
@@ -251,10 +232,3 @@ export const FileSystemProvider: React.FC<{ children: ReactNode }> = ({ children
   );
 };
 
-export const useFileSystem = (): FileSystemContextType => {
-  const context = useContext(FileSystemContext);
-  if (context === undefined) {
-    throw new Error('useFileSystem must be used within a FileSystemProvider');
-  }
-  return context;
-};
