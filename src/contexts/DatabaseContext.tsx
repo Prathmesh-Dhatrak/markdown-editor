@@ -1,13 +1,8 @@
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import React, { createContext, useEffect, useState, ReactNode } from 'react';
 import { initDB } from '../lib/db';
+import { DatabaseContextType } from '../types';
 
-interface DatabaseContextType {
-  isLoading: boolean;
-  error: Error | null;
-  isInitialized: boolean;
-}
-
-const DatabaseContext = createContext<DatabaseContextType | undefined>(undefined);
+export const DatabaseContext = createContext<DatabaseContextType | undefined>(undefined);
 
 export const DatabaseProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
@@ -34,12 +29,4 @@ export const DatabaseProvider: React.FC<{ children: ReactNode }> = ({ children }
       {children}
     </DatabaseContext.Provider>
   );
-};
-
-export const useDatabase = (): DatabaseContextType => {
-  const context = useContext(DatabaseContext);
-  if (context === undefined) {
-    throw new Error('useDatabase must be used within a DatabaseProvider');
-  }
-  return context;
 };

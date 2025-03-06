@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { ChevronRight, ChevronDown, Folder, FolderOpen, File, Plus, MoreVertical, Trash2, Edit } from 'lucide-react';
 import { FolderData, FileData } from '../../types';
-import { useFileSystem } from '../../contexts/FileSystemContext';
+import { useFileSystem } from '../../hooks/useFileSystem';
 
 interface FolderItemProps {
   folder: FolderData;

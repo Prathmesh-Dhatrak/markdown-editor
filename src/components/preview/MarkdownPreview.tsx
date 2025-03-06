@@ -2,8 +2,8 @@ import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
-import { useFileSystem } from '../../contexts/FileSystemContext';
 import type { Components } from 'react-markdown';
+import { useFileSystem } from '../../hooks/useFileSystem';
 
 // Interface for the code component props which includes inline prop
 interface CodeProps {

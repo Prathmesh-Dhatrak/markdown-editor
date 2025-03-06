@@ -8,7 +8,7 @@ import MarkdownPreview from './components/preview/MarkdownPreview';
 import EditorToolbar from './components/editor/EditorToolbar';
 import ExportModal from './components/modals/ExportModal';
 import ImportModal from './components/modals/ImportModal';
-import { useUIState } from './contexts/UIStateContext';
+import { useUIState } from './hooks/useUIState';
 
 const AppContent: React.FC = () => {
   const { sidebarWidth, previewEnabled } = useUIState();

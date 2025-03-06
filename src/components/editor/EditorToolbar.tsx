@@ -14,8 +14,8 @@ import {
   Moon,
   Sun
 } from 'lucide-react';
-import { useFileSystem } from '../../contexts/FileSystemContext';
-import { useUIState } from '../../contexts/UIStateContext';
+import { useFileSystem } from '../../hooks/useFileSystem';
+import { useUIState } from '../../hooks/useUIState';
 
 interface EditorToolbarProps {
   onExport: () => void;
