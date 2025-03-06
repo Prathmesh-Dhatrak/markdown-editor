@@ -9,9 +9,10 @@ import { useUIState } from '../../hooks/useUIState';
 
 const MarkdownEditor: React.FC = () => {
   const { activeFile, updateFileContent } = useFileSystem();
-  const { darkMode } = useUIState();
+  const { darkMode, previewEnabled, isMobileView } = useUIState();
   const [content, setContent] = useState('');
   const [isInitialized, setIsInitialized] = useState(false);
+  const [editorHeight, setEditorHeight] = useState('100%');
   const editorContainerRef = useRef<HTMLDivElement>(null);
   
   // Keep track of the content changes
@@ -53,6 +54,39 @@ const MarkdownEditor: React.FC = () => {
     }
   }, [activeFile]);
 
+  // Adjust editor height based on container size
+  useEffect(() => {
+    const updateEditorHeight = () => {
+      if (editorContainerRef.current) {
+        // On mobile we want to make sure the editor fits in the viewport
+        if (isMobileView) {
+          // On mobile, calculate a reasonable height that leaves room for the toolbar and preview (if enabled)
+          const viewportHeight = window.innerHeight;
+          const toolbarHeight = 48; // Approximate toolbar height
+          
+          if (previewEnabled) {
+            // If preview is enabled, use percentage-based height instead of fixed pixels
+            setEditorHeight('100%'); // Let the parent div constrain this
+          } else {
+            // If preview is disabled, calculate available height
+            const availableHeight = viewportHeight - toolbarHeight - 20; // 20px buffer
+            setEditorHeight(`${availableHeight}px`);
+          }
+        } else {
+          // On desktop, use full height
+          setEditorHeight('100%');
+        }
+      }
+    };
+    
+    updateEditorHeight();
+    window.addEventListener('resize', updateEditorHeight);
+    
+    return () => {
+      window.removeEventListener('resize', updateEditorHeight);
+    };
+  }, [isMobileView, previewEnabled]);
+
   // Function to handle content changes from the editor
   const handleChange = useCallback((value: string) => {
     console.log(`Editor content changed, new length: ${value.length}`);
@@ -78,7 +112,7 @@ const MarkdownEditor: React.FC = () => {
       {isInitialized ? (
         <CodeMirror
           value={content}
-          height="100%"
+          height={editorHeight}
           extensions={[
             markdown({ 
               base: markdownLanguage, 
