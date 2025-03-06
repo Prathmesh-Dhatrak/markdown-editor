@@ -74,6 +74,7 @@ export interface UIStateContextType {
   sidebarWidth: number;
   previewEnabled: boolean;
   darkMode: boolean;
+  isMobileView: boolean; // New property for responsive design
   isLoading: boolean;
   setSidebarWidth: (width: number) => Promise<void>;
   togglePreview: () => Promise<void>;

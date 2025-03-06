@@ -6,7 +6,7 @@ interface ExportModalProps {
   onClose: () => void;
 }
 
-const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => {
+export const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => {
   const [isExporting, setIsExporting] = useState(false);
   
   if (!isOpen) return null;
@@ -24,22 +24,22 @@ const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => {
   };
   
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-96">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white dark:bg-gray-800 rounded-lg p-4 md:p-6 w-full max-w-sm">
         <h2 className="text-xl font-semibold mb-4">Export Files</h2>
         <p className="mb-4 text-gray-600 dark:text-gray-300">
           This will export all your folders and files as a JSON file that you can later import back.
         </p>
         <div className="flex justify-end space-x-2">
           <button
-            className="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded"
+            className="px-3 py-1 md:px-4 md:py-2 bg-gray-200 dark:bg-gray-700 rounded text-sm md:text-base"
             onClick={onClose}
             disabled={isExporting}
           >
             Cancel
           </button>
           <button
-            className="px-4 py-2 bg-blue-500 text-white rounded flex items-center"
+            className="px-3 py-1 md:px-4 md:py-2 bg-blue-500 text-white rounded flex items-center text-sm md:text-base"
             onClick={handleExport}
             disabled={isExporting}
           >
@@ -60,5 +60,3 @@ const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => {
     </div>
   );
 };
-
-export default ExportModal;
