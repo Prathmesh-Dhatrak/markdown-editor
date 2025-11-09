@@ -3,10 +3,13 @@ import CodeMirror from '@uiw/react-codemirror';
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
 import { languages } from '@codemirror/language-data';
 import { githubLight, githubDark } from '@uiw/codemirror-theme-github';
+import { Check, Loader2 } from 'lucide-react';
 import { debounce } from '../../lib/utils';
 import { useFileSystem } from '../../hooks/useFileSystem';
 import { useUIState } from '../../hooks/useUIState';
 import { logger } from '../../lib/logger';
+
+type SaveStatus = 'idle' | 'saving' | 'saved';
 
 const MarkdownEditor: React.FC = () => {
   const { activeFile, updateFileContent } = useFileSystem();
@@ -14,6 +17,7 @@ const MarkdownEditor: React.FC = () => {
   const [content, setContent] = useState('');
   const [isInitialized, setIsInitialized] = useState(false);
   const [editorHeight, setEditorHeight] = useState('100%');
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
   const editorContainerRef = useRef<HTMLDivElement>(null);
   
   // Keep track of the content changes
@@ -26,11 +30,17 @@ const MarkdownEditor: React.FC = () => {
   useEffect(() => {
     debouncedUpdateRef.current = debounce(async (value: string, fileId: string) => {
       try {
+        setSaveStatus('saving');
         logger.log(`Saving content for file ${fileId}, content length: ${value.length}`);
         await updateFileContent(fileId, value);
         logger.log(`Content saved successfully for file ${fileId}`);
+        setSaveStatus('saved');
+        
+        // Reset to idle after 2 seconds
+        setTimeout(() => setSaveStatus('idle'), 2000);
       } catch (error) {
         logger.error(`Error saving content for file ${fileId}:`, error);
+        setSaveStatus('idle');
       }
     }, 500);
   }, [updateFileContent]);
@@ -109,7 +119,24 @@ const MarkdownEditor: React.FC = () => {
 
   // Only attempt to render the editor if we've initialized the content from the active file
   return (
-    <div className="h-full overflow-auto" ref={editorContainerRef}>
+    <div className="h-full overflow-auto relative" ref={editorContainerRef}>
+      {/* Save Status Indicator */}
+      {saveStatus !== 'idle' && (
+        <div className="absolute top-2 right-2 z-10 flex items-center gap-1 px-2 py-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded shadow-sm text-xs">
+          {saveStatus === 'saving' ? (
+            <>
+              <Loader2 size={12} className="animate-spin text-blue-500" />
+              <span className="text-gray-600 dark:text-gray-300">Saving...</span>
+            </>
+          ) : (
+            <>
+              <Check size={12} className="text-green-500" />
+              <span className="text-gray-600 dark:text-gray-300">Saved</span>
+            </>
+          )}
+        </div>
+      )}
+      
       {isInitialized ? (
         <CodeMirror
           value={content}
