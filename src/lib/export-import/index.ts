@@ -36,19 +36,59 @@ export const downloadExport = async (): Promise<void> => {
 };
 
 // Import functionality
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const validateImportData = (data: any): boolean => {
+export const validateImportData = (data: unknown): data is ExportData => {
+  // Type guard to check if data matches ExportData interface
   if (!data || typeof data !== 'object') return false;
-  if (!data.version || !data.exportedAt) return false;
-  if (!Array.isArray(data.folders) || !Array.isArray(data.files)) return false;
   
-  // Basic validation of folders and files
-  for (const folder of data.folders) {
+  const maybeExportData = data as Partial<ExportData>;
+  
+  // Check required top-level properties
+  if (!maybeExportData.version || !maybeExportData.exportedAt) return false;
+  if (!Array.isArray(maybeExportData.folders) || !Array.isArray(maybeExportData.files)) return false;
+  
+  // Validate folders
+  const folderIds = new Set<string>();
+  for (const folder of maybeExportData.folders) {
     if (!folder.id || !folder.name || folder.parentId === undefined) return false;
+    if (typeof folder.id !== 'string' || typeof folder.name !== 'string') return false;
+    if (folder.parentId !== null && typeof folder.parentId !== 'string') return false;
+    
+    // Check for duplicate IDs
+    if (folderIds.has(folder.id)) return false;
+    folderIds.add(folder.id);
   }
   
-  for (const file of data.files) {
+  // Check for circular references in folder hierarchy
+  const checkCircular = (folderId: string, visited: Set<string> = new Set()): boolean => {
+    if (visited.has(folderId)) return true; // Circular reference detected
+    visited.add(folderId);
+    
+    const folder = maybeExportData.folders!.find(f => f.id === folderId);
+    if (!folder || folder.parentId === null) return false;
+    
+    return checkCircular(folder.parentId, visited);
+  };
+  
+  for (const folder of maybeExportData.folders) {
+    if (folder.parentId && checkCircular(folder.id)) return false;
+  }
+  
+  // Validate files
+  const fileIds = new Set<string>();
+  for (const file of maybeExportData.files) {
     if (!file.id || !file.name || !file.folderId || file.content === undefined) return false;
+    if (typeof file.id !== 'string' || typeof file.name !== 'string') return false;
+    if (typeof file.folderId !== 'string' || typeof file.content !== 'string') return false;
+    
+    // Check for duplicate IDs
+    if (fileIds.has(file.id)) return false;
+    fileIds.add(file.id);
+    
+    // Validate that folderId references an existing folder
+    if (!folderIds.has(file.folderId)) return false;
+    
+    // Check file content size (limit to 10MB to prevent memory issues)
+    if (file.content.length > 10 * 1024 * 1024) return false;
   }
   
   return true;
