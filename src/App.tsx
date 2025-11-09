@@ -82,16 +82,9 @@ const AppContent: React.FC = () => {
   };
 
   return (
-    <div className="h-screen flex flex-col bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100">
-      <EditorToolbar
-        onExport={() => setIsExportModalOpen(true)}
-        onImport={() => setIsImportModalOpen(true)}
-        isMobileView={isMobileView}
-        onToggleSidebar={toggleSidebar}
-        isSidebarCollapsed={isSidebarCollapsed}
-      />
-
-      <div className="flex-1 flex overflow-hidden relative">
+    <div className="h-screen flex bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+      {/* Sidebar - Full height on the left */}
+      <div className="flex relative">
         {/* Sidebar toggle button */}
         <SidebarToggle
           isCollapsed={isSidebarCollapsed}
@@ -112,9 +105,20 @@ const AppContent: React.FC = () => {
             <FolderTree />
           </div>
         </div>
+      </div>
+
+      {/* Main content area - Header + Editor/Preview */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <EditorToolbar
+          onExport={() => setIsExportModalOpen(true)}
+          onImport={() => setIsImportModalOpen(true)}
+          isMobileView={isMobileView}
+          onToggleSidebar={toggleSidebar}
+          isSidebarCollapsed={isSidebarCollapsed}
+        />
 
         {/* Editor/Preview Area */}
-        <div className={`flex-1 flex flex-col md:flex-row overflow-hidden ${isSidebarCollapsed ? 'pl-0 md:pl-10' : ''}`}>
+        <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
           {isMobileView ? (
             // Mobile view: Stack vertically with conditional preview
             <div className="flex flex-col h-full">
