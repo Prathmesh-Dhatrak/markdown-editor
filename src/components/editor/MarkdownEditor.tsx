@@ -6,6 +6,7 @@ import { githubLight, githubDark } from '@uiw/codemirror-theme-github';
 import { debounce } from '../../lib/utils';
 import { useFileSystem } from '../../hooks/useFileSystem';
 import { useUIState } from '../../hooks/useUIState';
+import { logger } from '../../lib/logger';
 
 const MarkdownEditor: React.FC = () => {
   const { activeFile, updateFileContent } = useFileSystem();
@@ -25,11 +26,11 @@ const MarkdownEditor: React.FC = () => {
   useEffect(() => {
     debouncedUpdateRef.current = debounce(async (value: string, fileId: string) => {
       try {
-        console.log(`Saving content for file ${fileId}, content length: ${value.length}`);
+        logger.log(`Saving content for file ${fileId}, content length: ${value.length}`);
         await updateFileContent(fileId, value);
-        console.log(`Content saved successfully for file ${fileId}`);
+        logger.log(`Content saved successfully for file ${fileId}`);
       } catch (error) {
-        console.error(`Error saving content for file ${fileId}:`, error);
+        logger.error(`Error saving content for file ${fileId}:`, error);
       }
     }, 500);
   }, [updateFileContent]);
@@ -37,8 +38,8 @@ const MarkdownEditor: React.FC = () => {
   // Handle updates to the active file
   useEffect(() => {
     if (activeFile) {
-      console.log(`Active file changed to: ${activeFile.name} (${activeFile.id})`);
-      console.log(`Content length: ${activeFile.content.length}`);
+      logger.log(`Active file changed to: ${activeFile.name} (${activeFile.id})`);
+      logger.log(`Content length: ${activeFile.content.length}`);
       
       // First check if the content is already current to avoid unnecessary editor resets
       if (contentRef.current !== activeFile.content) {
@@ -48,7 +49,7 @@ const MarkdownEditor: React.FC = () => {
       
       setIsInitialized(true);
     } else {
-      console.log('No active file');
+      logger.log('No active file');
       contentRef.current = '';
       setContent('');
     }
@@ -89,7 +90,7 @@ const MarkdownEditor: React.FC = () => {
 
   // Function to handle content changes from the editor
   const handleChange = useCallback((value: string) => {
-    console.log(`Editor content changed, new length: ${value.length}`);
+    logger.log(`Editor content changed, new length: ${value.length}`);
     contentRef.current = value;
     setContent(value);
     

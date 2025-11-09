@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { DatabaseProvider } from './contexts/DatabaseContext';
 import { FileSystemProvider } from './contexts/FileSystemContext';
 import { UIStateProvider } from './contexts/UIStateContext';
+import { ToastProvider } from './contexts/ToastContext';
+import { ConfirmDialogProvider } from './contexts/ConfirmDialogContext';
 import FolderTree from './components/explorer/FolderTree';
 import MarkdownEditor from './components/editor/MarkdownEditor';
 import MarkdownPreview from './components/preview/MarkdownPreview';
@@ -10,6 +12,7 @@ import SidebarToggle from './components/common/SidebarToggle';
 import { useUIState } from './hooks/useUIState';
 import { ExportModal } from './components/modals/ExportModal';
 import { ImportModal } from './components/modals/ImportModal';
+import { logger } from './lib/logger';
 
 const AppContent: React.FC = () => {
   const { sidebarWidth, previewEnabled, setSidebarWidth } = useUIState();
@@ -26,11 +29,11 @@ const AppContent: React.FC = () => {
   useEffect(() => {
     if (!initialCheckDoneRef.current) {
       const isSmallScreen = window.innerWidth < 768;
-      console.log("Initial screen size check:", isSmallScreen ? "mobile" : "desktop");
+      logger.log("Initial screen size check:", isSmallScreen ? "mobile" : "desktop");
       setIsMobileView(isSmallScreen);
       
       if (isSmallScreen) {
-        console.log("Initial setup: collapsing sidebar for mobile");
+        logger.log("Initial setup: collapsing sidebar for mobile");
         setIsSidebarCollapsed(true);
         setSidebarWidth(0);
       }
@@ -46,12 +49,12 @@ const AppContent: React.FC = () => {
       
       // Only update if view type changed
       if ((isSmallScreen && !isMobileView) || (!isSmallScreen && isMobileView)) {
-        console.log("View changed to:", isSmallScreen ? "mobile" : "desktop");
+        logger.log("View changed to:", isSmallScreen ? "mobile" : "desktop");
         setIsMobileView(isSmallScreen);
         
         // Only auto-collapse when changing to mobile and not user toggled
         if (isSmallScreen && !userToggledRef.current) {
-          console.log("Auto-collapsing sidebar due to resize to mobile");
+          logger.log("Auto-collapsing sidebar due to resize to mobile");
           setIsSidebarCollapsed(true);
           setSidebarWidth(0);
         }
@@ -72,7 +75,7 @@ const AppContent: React.FC = () => {
     userToggledRef.current = true; // Mark as user-initiated
     
     const newState = !isSidebarCollapsed;
-    console.log("USER TOGGLE: Setting sidebar to:", newState ? "Collapsed" : "Expanded");
+    logger.log("USER TOGGLE: Setting sidebar to:", newState ? "Collapsed" : "Expanded");
     
     setIsSidebarCollapsed(newState);
     setSidebarWidth(newState ? 0 : 250);
@@ -162,7 +165,11 @@ function App() {
     <DatabaseProvider>
       <FileSystemProvider>
         <UIStateProvider>
-          <AppContent />
+          <ToastProvider>
+            <ConfirmDialogProvider>
+              <AppContent />
+            </ConfirmDialogProvider>
+          </ToastProvider>
         </UIStateProvider>
       </FileSystemProvider>
     </DatabaseProvider>
