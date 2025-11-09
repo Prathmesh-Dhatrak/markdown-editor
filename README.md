@@ -10,7 +10,7 @@ A modern browser-based markdown editor with real-time preview, file management, 
 - 👁️ Side-by-side preview with proper markdown rendering
 - 📁 File system organization with folders and files
 - 🌓 Dark/light mode toggle
-- 💾 Automatic saving with IndexedDB
+- 💾 Automatic saving with IndexedDB (all data persists across page refreshes and browser restarts)
 - 📤 Import/export functionality
 - 📱 Responsive design
 
@@ -61,18 +61,34 @@ yarn dev
 
 - Click the folder icon in the Explorer pane to create a new folder
 - Click the file icon to create a new markdown file
-- Files are automatically saved as you type
+- Files are automatically saved as you type (500ms after you stop typing)
+- A "Saved" indicator appears in the editor when your content is persisted
+
+### Data Persistence
+
+**Your data is completely safe and persistent!**
+
+- All files, folders, and content are stored in your browser's IndexedDB
+- Data persists across page refreshes (F5, Ctrl+R)
+- Data persists when you close and reopen your browser
+- Data persists even after system restarts
+- No internet connection required - everything is stored locally
+- Auto-save happens automatically 500ms after you stop typing
+
+**Note:** Data is stored per browser. If you switch browsers or clear browser data, your files will not be available. Use the Export feature to create backups.
 
 ### Editing
 
 - Select any file from the Explorer pane to start editing
 - Use the toolbar buttons to add markdown formatting
 - The preview pane shows how your document will look when rendered
+- Watch for the "Saving..." and "Saved" indicators to confirm your changes are persisted
 
 ### Import/Export
 
 - Use the export button to download all your folders and files as a JSON file
 - Use the import button to restore previously exported content
+- Recommended: Export regularly to create backups of your work
 
 ## Development
 

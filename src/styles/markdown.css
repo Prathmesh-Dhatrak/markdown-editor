@@ -143,9 +143,10 @@
 }
 
 .sidebar-toggle {
-  position: fixed;
-  bottom: 10px; /* Position below the toolbar */
+  position: absolute;
+  top: 50%;
   left: 0;
+  transform: translateY(-50%);
   z-index: 50;
   padding: 8px;
   background-color: #3b82f6; /* Blue color for visibility */
@@ -174,7 +175,6 @@
 @media (max-width: 480px) {
   .sidebar-toggle {
     padding: 10px; /* Larger touch target */
-    top: 50px; /* More easily reachable */
   }
 }
 

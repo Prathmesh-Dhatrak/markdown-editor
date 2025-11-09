@@ -22,7 +22,29 @@ interface MarkdownEditorDB extends DBSchema {
 const DB_NAME = 'MarkdownEditorDB';
 const DB_VERSION = 1;
 
+/**
+ * Check if IndexedDB is available in the current browser
+ */
+const isIndexedDBAvailable = (): boolean => {
+  try {
+    return typeof indexedDB !== 'undefined';
+  } catch {
+    return false;
+  }
+};
+
+/**
+ * Initialize the database. Throws an error if IndexedDB is not available.
+ */
 export const initDB = async () => {
+  if (!isIndexedDBAvailable()) {
+    throw new Error(
+      'IndexedDB is not available in this browser. ' +
+      'This may happen in private browsing mode or if IndexedDB is disabled. ' +
+      'Please use a regular browsing session or enable IndexedDB in your browser settings.'
+    );
+  }
+
   const db = await openDB<MarkdownEditorDB>(DB_NAME, DB_VERSION, {
     upgrade(db) {
       // Create folders store

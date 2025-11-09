@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { downloadExport } from '../../lib/export-import';
+import { useToast } from '../../hooks/useToast';
 
 interface ExportModalProps {
   isOpen: boolean;
@@ -8,6 +9,7 @@ interface ExportModalProps {
 
 export const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => {
   const [isExporting, setIsExporting] = useState(false);
+  const { showError } = useToast();
   
   if (!isOpen) return null;
   
@@ -17,7 +19,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => 
       await downloadExport();
       onClose();
     } catch (error) {
-      alert(`Export failed: ${error instanceof Error ? error.message : String(error)}`);
+      showError(`Export failed: ${error instanceof Error ? error.message : String(error)}`);
     } finally {
       setIsExporting(false);
     }

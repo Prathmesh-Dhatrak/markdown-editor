@@ -3,6 +3,7 @@ import { FolderPlus, FilePlus } from 'lucide-react';
 import FolderItem from './FolderItem';
 import Spinner from '../common/Spinner';
 import { useFileSystem } from '../../hooks/useFileSystem';
+import { useToast } from '../../hooks/useToast';
 
 const FolderTree: React.FC = () => {
   const { 
@@ -13,6 +14,7 @@ const FolderTree: React.FC = () => {
     createNewFolder, 
     createNewFile 
   } = useFileSystem();
+  const { showError } = useToast();
   
   const [isCreatingFolder, setIsCreatingFolder] = useState(false);
   const [isCreatingFile, setIsCreatingFile] = useState(false);
@@ -72,13 +74,20 @@ const FolderTree: React.FC = () => {
     if (!newItemName.trim()) return;
     
     try {
+      let fileName = newItemName.trim();
+      
+      // Add .md extension if creating a file and it doesn't have one
+      if (newItemType === 'file' && !fileName.endsWith('.md')) {
+        fileName += '.md';
+      }
+      
       if (newItemType === 'folder' && newItemParentId !== null) {
-        await createNewFolder(newItemName.trim(), newItemParentId);
+        await createNewFolder(fileName, newItemParentId);
       } else if (newItemType === 'file' && newItemParentId !== null) {
-        await createNewFile(newItemName.trim(), newItemParentId);
+        await createNewFile(fileName, newItemParentId);
       }
     } catch (error) {
-      alert(`Failed to create ${newItemType}: ${error instanceof Error ? error.message : String(error)}`);
+      showError(`Failed to create ${newItemType}: ${error instanceof Error ? error.message : String(error)}`);
     } finally {
       setIsCreatingFolder(false);
       setIsCreatingFile(false);

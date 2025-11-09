@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { DatabaseProvider } from './contexts/DatabaseContext';
 import { FileSystemProvider } from './contexts/FileSystemContext';
 import { UIStateProvider } from './contexts/UIStateContext';
+import { ToastProvider } from './contexts/ToastContext';
+import { ConfirmDialogProvider } from './contexts/ConfirmDialogContext';
 import FolderTree from './components/explorer/FolderTree';
 import MarkdownEditor from './components/editor/MarkdownEditor';
 import MarkdownPreview from './components/preview/MarkdownPreview';
@@ -10,6 +12,7 @@ import SidebarToggle from './components/common/SidebarToggle';
 import { useUIState } from './hooks/useUIState';
 import { ExportModal } from './components/modals/ExportModal';
 import { ImportModal } from './components/modals/ImportModal';
+import { logger } from './lib/logger';
 
 const AppContent: React.FC = () => {
   const { sidebarWidth, previewEnabled, setSidebarWidth } = useUIState();
@@ -26,11 +29,11 @@ const AppContent: React.FC = () => {
   useEffect(() => {
     if (!initialCheckDoneRef.current) {
       const isSmallScreen = window.innerWidth < 768;
-      console.log("Initial screen size check:", isSmallScreen ? "mobile" : "desktop");
+      logger.log("Initial screen size check:", isSmallScreen ? "mobile" : "desktop");
       setIsMobileView(isSmallScreen);
       
       if (isSmallScreen) {
-        console.log("Initial setup: collapsing sidebar for mobile");
+        logger.log("Initial setup: collapsing sidebar for mobile");
         setIsSidebarCollapsed(true);
         setSidebarWidth(0);
       }
@@ -46,12 +49,12 @@ const AppContent: React.FC = () => {
       
       // Only update if view type changed
       if ((isSmallScreen && !isMobileView) || (!isSmallScreen && isMobileView)) {
-        console.log("View changed to:", isSmallScreen ? "mobile" : "desktop");
+        logger.log("View changed to:", isSmallScreen ? "mobile" : "desktop");
         setIsMobileView(isSmallScreen);
         
         // Only auto-collapse when changing to mobile and not user toggled
         if (isSmallScreen && !userToggledRef.current) {
-          console.log("Auto-collapsing sidebar due to resize to mobile");
+          logger.log("Auto-collapsing sidebar due to resize to mobile");
           setIsSidebarCollapsed(true);
           setSidebarWidth(0);
         }
@@ -72,23 +75,16 @@ const AppContent: React.FC = () => {
     userToggledRef.current = true; // Mark as user-initiated
     
     const newState = !isSidebarCollapsed;
-    console.log("USER TOGGLE: Setting sidebar to:", newState ? "Collapsed" : "Expanded");
+    logger.log("USER TOGGLE: Setting sidebar to:", newState ? "Collapsed" : "Expanded");
     
     setIsSidebarCollapsed(newState);
     setSidebarWidth(newState ? 0 : 250);
   };
 
   return (
-    <div className="h-screen flex flex-col bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100">
-      <EditorToolbar
-        onExport={() => setIsExportModalOpen(true)}
-        onImport={() => setIsImportModalOpen(true)}
-        isMobileView={isMobileView}
-        onToggleSidebar={toggleSidebar}
-        isSidebarCollapsed={isSidebarCollapsed}
-      />
-
-      <div className="flex-1 flex overflow-hidden relative">
+    <div className="h-screen flex bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+      {/* Sidebar - Full height on the left */}
+      <div className="flex relative">
         {/* Sidebar toggle button */}
         <SidebarToggle
           isCollapsed={isSidebarCollapsed}
@@ -109,9 +105,20 @@ const AppContent: React.FC = () => {
             <FolderTree />
           </div>
         </div>
+      </div>
+
+      {/* Main content area - Header + Editor/Preview */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <EditorToolbar
+          onExport={() => setIsExportModalOpen(true)}
+          onImport={() => setIsImportModalOpen(true)}
+          isMobileView={isMobileView}
+          onToggleSidebar={toggleSidebar}
+          isSidebarCollapsed={isSidebarCollapsed}
+        />
 
         {/* Editor/Preview Area */}
-        <div className={`flex-1 flex flex-col md:flex-row overflow-hidden ${isSidebarCollapsed ? 'pl-0 md:pl-10' : ''}`}>
+        <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
           {isMobileView ? (
             // Mobile view: Stack vertically with conditional preview
             <div className="flex flex-col h-full">
@@ -162,7 +169,11 @@ function App() {
     <DatabaseProvider>
       <FileSystemProvider>
         <UIStateProvider>
-          <AppContent />
+          <ToastProvider>
+            <ConfirmDialogProvider>
+              <AppContent />
+            </ConfirmDialogProvider>
+          </ToastProvider>
         </UIStateProvider>
       </FileSystemProvider>
     </DatabaseProvider>
